@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bewerberin - Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #f0f2f5;
+      --color-surface: #ffffff;
+      --color-border: #2c2c2c;
+      --color-border-light: #e4e6eb;
+      --color-text: #050505;
+      --color-text-secondary: #65676b;
+      --color-user-bubble: #0084ff;
+      --color-bot-bubble: #f0f0f0;
+      --color-user-text: #ffffff;
+      --color-bot-text: #050505;
+      --color-btn-hover: #e4e6eb;
+      --color-header: #2c2c2c;
+      --color-clear-btn: #ff4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--color-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    #chat-container {
+      max-width: 420px;
+      width: 100%;
+      height: 600px;
+      border-radius: 16px;
+      border: 2px solid var(--color-border);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+      background: var(--color-surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #chat-header {
+      padding: 16px 20px;
+      background: var(--color-header);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    #chat-title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #bot-avatar-header {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    #chat-title {
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    #clear-chat-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #clear-chat-btn:hover {
+      background: rgba(255, 68, 68, 0.2);
+      border-color: var(--color-clear-btn);
+    }
+
+    #chat-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #chat-history::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chat-history::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .message-wrapper {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .message-wrapper.user {
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .avatar.bot {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .avatar.user {
+      background: linear-gradient(135deg, #0084ff 0%, #00a8ff 100%);
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      background: var(--color-user-bubble);
+      color: var(--color-user-text);
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot {
+      background: var(--color-bot-bubble);
+      color: var(--color-bot-text);
+      border-bottom-left-radius: 4px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #typing-indicator {
+      display: none;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 0 20px;
+      margin-bottom: 12px;
+    }
+
+    #typing-indicator.active {
+      display: flex;
+    }
+
+    .typing-bubble {
+      background: var(--color-bot-bubble);
+      padding: 10px 14px;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #90949c;
+      animation: typingAnimation 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typingAnimation {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+      }
+      30% {
+        transform: translateY(-10px);
+        opacity: 1;
+      }
+    }
+
+    #chat-input-area {
+      display: flex;
+      gap: 8px;
+      padding: 16px 20px;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border-light);
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--color-border-light);
+      border-radius: 24px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #chat-input:focus {
+      border-color: var(--color-user-bubble);
+    }
+
+    #chat-send {
+      background: var(--color-user-bubble);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    #chat-send:hover {
+      background: #006fd6;
+      transform: scale(1.05);
+    }
+
+    #chat-send:active {
+      transform: scale(0.95);
+    }
+
+    #chat-send:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: scale(1);
+    }
+
+    @media (max-width: 480px) {
+      #chat-container {
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+
+      body {
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-header">
+      <div id="chat-title-section">
+        <div id="bot-avatar-header">🤖</div>
+        <div id="chat-title">Bewerberin</div>
+      </div>
+      <button id="clear-chat-btn" type="button">Löschen</button>
+    </div>
+
+    <div id="chat-history"></div>
+
+    <div id="typing-indicator">
+      <div class="avatar bot">🤖</div>
+      <div class="typing-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+
+    <form id="chat-input-area" autocomplete="off">
+      <input 
+        type="text" 
+        id="chat-input" 
+        placeholder="Geben Sie Ihre Frage ein..." 
+        required 
+      />
+      <button type="submit" id="chat-send">➤</button>
+    </form>
+  </div>
+
+  <script>
+    // === ВАЖЛИВО: Введіть свій Make Webhook-URL ===
+    const webhookURL = "https://hook.eu2.make.com/d8iurnkxd5og7uds76ilhbej4yjhuwww";
+
+    const chatHistory = document.getElementById("chat-history");
+    const chatForm = document.getElementById("chat-input-area");
+    const chatInput = document.getElementById("chat-input");
+    const chatSendBtn = document.getElementById("chat-send");
+    const typingIndicator = document.getElementById("typing-indicator");
+    const clearChatBtn = document.getElementById("clear-chat-btn");
+
+    let history = [];
+
+    function addMessage(sender, text) {
+      const wrapper = document.createElement("div");
+      wrapper.className = `message-wrapper ${sender}`;
+
+      const avatar = document.createElement("div");
+      avatar.className = `avatar ${sender}`;
+      avatar.textContent = sender === "user" ? "👤" : "🤖";
+
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `message ${sender}`;
+      msgDiv.textContent = text;
+
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(msgDiv);
+      chatHistory.appendChild(wrapper);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function showTyping(show) {
+      typingIndicator.classList.toggle("active", show);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function fetchWithTimeout(resource, options = {}) {
+      const { timeout = 30000 } = options;
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      options.signal = controller.signal;
+      try {
+        const response = await fetch(resource, options);
+        clearTimeout(id);
+        return response;
+      } catch (error) {
+        clearTimeout(id);
+        throw error;
+      }
+    }
+
+    chatForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const userInput = chatInput.value.trim();
+      if (!userInput) return;
+
+      addMessage("user", userInput);
+      history.push({ role: "user", content: userInput });
+      chatInput.value = "";
+      chatSendBtn.disabled = true;
+
+      showTyping(true);
+
+      try {
+        const response = await fetchWithTimeout(webhookURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ frage: userInput, verlauf: history }),
+          timeout: 30000
+        });
+
+        if (!response.ok) throw new Error("Server nicht verfügbar");
+        
+        const text = await response.text();
+        console.log("RAW response text:", text);
+
+        let data;
+        try {
+          const cleanText = text.replace(/^\uFEFF/, '').trim();
+          data = JSON.parse(cleanText);
+          console.log("Cleaned data:", data);
+        } catch (err) {
+          console.log("JSON parse error:", err.message);
+          addMessage("bot", "JSON parse error: " + err.message);
+          showTyping(false);
+          chatSendBtn.disabled = false;
+          return;
+        }
+
+        showTyping(false);
+
+        if (data && data.antwort) {
+          addMessage("bot", data.antwort);
+          history.push({ role: "bot", content: data.antwort });
+        }
+
+      } catch (err) {
+        showTyping(false);
+        addMessage("bot", "Entschuldigung, der Bot ist gerade nicht verfügbar.");
+        console.error("Error:", err);
+      } finally {
+        chatSendBtn.disabled = false;
+        chatInput.focus();
+      }
+    });
+
+    clearChatBtn.addEventListener("click", function() {
+      if (confirm("Möchten Sie den gesamten Chat wirklich löschen?")) {
+        chatHistory.innerHTML = "";
+        history = [];
+        chatInput.focus();
+      }
+    });
+
+    window.onload = () => chatInput.focus();
+  </script>
+</body>
+</html>
